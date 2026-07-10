@@ -8,6 +8,8 @@
 namespace AHF\ExportacionSelectiva\Import;
 
 use AHF\ExportacionSelectiva\Adapters\Adapter_Interface;
+use AHF\ExportacionSelectiva\Adapters\Acf_Adapter;
+use AHF\ExportacionSelectiva\Adapters\Elementor_Adapter;
 use AHF\ExportacionSelectiva\Adapters\Gutenberg_Adapter;
 use AHF\ExportacionSelectiva\Capabilities;
 use AHF\ExportacionSelectiva\Package\Wpcontent_Package;
@@ -32,6 +34,8 @@ class Importer {
 	public function __construct() {
 		$this->adapters = array(
 			new Gutenberg_Adapter(),
+			new Elementor_Adapter(),
+			new Acf_Adapter(),
 		);
 	}
 

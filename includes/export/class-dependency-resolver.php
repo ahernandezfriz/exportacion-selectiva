@@ -7,6 +7,9 @@
 
 namespace AHF\ExportacionSelectiva\Export;
 
+use AHF\ExportacionSelectiva\Adapters\Acf_Adapter;
+use AHF\ExportacionSelectiva\Adapters\Elementor_Adapter;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -61,6 +64,12 @@ class Dependency_Resolver {
 			if ( ! empty( $content_attachments ) ) {
 				$attachment_ids = array_merge( $attachment_ids, $content_attachments );
 			}
+
+			$attachment_ids = array_merge(
+				$attachment_ids,
+				Elementor_Adapter::collect_attachment_ids( $post_id ),
+				Acf_Adapter::collect_attachment_ids( $post_id )
+			);
 
 			$terms = wp_get_object_terms( $post_id, get_object_taxonomies( $post->post_type ) );
 

@@ -5,7 +5,7 @@ Tags: export, import, migration, content, pages
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -50,6 +50,8 @@ Author: Ariel Hernández Friz — https://arielhf.cl — hola@arielhf.cl
 * WordPress 6.9 or higher
 * PHP 7.4 or higher
 * Basic Gutenberg content
+* Elementor pages (meta + media ID remapping)
+* ACF field values (image, file, gallery, relationship remapping)
 
 This plugin does not send data to external services. All export and import processing happens on your WordPress site.
 
@@ -75,7 +77,11 @@ Yes. The import wizard lets you select which items to import.
 
 = Does it work with Elementor or Divi? =
 
-Version 1.0.0 includes basic support for metadata and Gutenberg. Advanced support for page builders will be added in later versions.
+Elementor pages are supported: `_elementor_data` and related meta are exported, and media IDs are remapped on import. Divi advanced support is not included yet.
+
+= Does it work with ACF? =
+
+Yes. ACF field values are exported with the post. Image, file, gallery, post object, and relationship IDs are remapped on import when possible.
 
 = Do I need the WordPress XML exporter? =
 
@@ -89,6 +95,12 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 
 == Changelog ==
 
+= 1.1.0 =
+* Added Elementor adapter with media ID remapping and CSS cache refresh.
+* Added ACF adapter with remapping for image, file, gallery, and relationship fields.
+* Dependency resolver now collects Elementor and ACF media attachments.
+* Added translation template (`languages/exportacion-selectiva.pot`).
+
 = 1.0.0 =
 * Initial release.
 * Selective export from bulk actions.
@@ -96,6 +108,9 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 * `.wpcontent` format version 1.0.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Adds Elementor and ACF adapters with media/relationship ID remapping.
 
 = 1.0.0 =
 First public release of the plugin.

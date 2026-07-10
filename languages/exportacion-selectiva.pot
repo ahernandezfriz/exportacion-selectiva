@@ -1,0 +1,232 @@
+# Copyright (C) 2026 Ariel Hernández Friz
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Exportación Selectiva 1.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/exportacion-selectiva\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-07-10T22:56:21+02:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: exportacion-selectiva\n"
+
+#. Plugin Name of the plugin
+#: exportacion-selectiva.php
+msgid "Exportación Selectiva"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: exportacion-selectiva.php
+msgid "https://github.com/ahernandezfriz/exportacion-selectiva"
+msgstr ""
+
+#. Description of the plugin
+#: exportacion-selectiva.php
+msgid "Selectively export and import pages, posts, and custom post types from the admin list tables."
+msgstr ""
+
+#. Author of the plugin
+#: exportacion-selectiva.php
+msgid "Ariel Hernández Friz"
+msgstr ""
+
+#. Author URI of the plugin
+#: exportacion-selectiva.php
+msgid "https://arielhf.cl"
+msgstr ""
+
+#: admin/class-admin-notices.php:39
+msgid "No tienes permisos para exportar contenido."
+msgstr ""
+
+#: admin/class-admin-notices.php:42
+msgid "La solicitud de exportación expiró. Inténtalo de nuevo."
+msgstr ""
+
+#: admin/class-admin-notices.php:45
+msgid "No se pudo completar la exportación."
+msgstr ""
+
+#: admin/class-admin-notices.php:57
+msgid "Ocurrió un error durante la exportación."
+msgstr ""
+
+#: admin/class-bulk-export.php:50
+msgid "Exportar"
+msgstr ""
+
+#: admin/class-import-wizard.php:44
+#: admin/class-import-wizard.php:45
+#: admin/views/import-wizard.php:20
+msgid "Importar contenido"
+msgstr ""
+
+#: admin/class-import-wizard.php:90
+msgid "Importar"
+msgstr ""
+
+#: admin/class-import-wizard.php:134
+#: includes/import/class-importer.php:119
+msgid "No tienes permisos para importar contenido."
+msgstr ""
+
+#: admin/class-import-wizard.php:164
+msgid "Debes seleccionar un archivo .wpcontent."
+msgstr ""
+
+#: admin/class-import-wizard.php:174
+msgid "No se pudo subir el archivo."
+msgstr ""
+
+#. translators: %s: post type label
+#: admin/views/import-wizard.php:26
+#, php-format
+msgid "Importa contenido selectivo al listado de %s."
+msgstr ""
+
+#. translators: 1: created count, 2: updated count, 3: duplicated count, 4: skipped count
+#: admin/views/import-wizard.php:40
+#, php-format
+msgid "Importación completada. Creados: %1$d. Actualizados: %2$d. Duplicados: %3$d. Omitidos: %4$d."
+msgstr ""
+
+#: admin/views/import-wizard.php:51
+#: admin/views/import-wizard.php:153
+msgid "Volver al listado"
+msgstr ""
+
+#: admin/views/import-wizard.php:56
+msgid "Contenido detectado"
+msgstr ""
+
+#: admin/views/import-wizard.php:61
+msgid "Origen:"
+msgstr ""
+
+#: admin/views/import-wizard.php:65
+msgid "Exportado:"
+msgstr ""
+
+#: admin/views/import-wizard.php:69
+msgid "Elementos:"
+msgstr ""
+
+#: admin/views/import-wizard.php:85
+msgid "Título"
+msgstr ""
+
+#: admin/views/import-wizard.php:86
+msgid "Slug"
+msgstr ""
+
+#: admin/views/import-wizard.php:87
+msgid "Estado"
+msgstr ""
+
+#: admin/views/import-wizard.php:108
+msgid "Si el contenido ya existe"
+msgstr ""
+
+#: admin/views/import-wizard.php:112
+msgid "Omitir"
+msgstr ""
+
+#: admin/views/import-wizard.php:116
+msgid "Actualizar"
+msgstr ""
+
+#: admin/views/import-wizard.php:120
+msgid "Duplicar"
+msgstr ""
+
+#: admin/views/import-wizard.php:126
+msgid "Importar selección"
+msgstr ""
+
+#: admin/views/import-wizard.php:129
+msgid "Cancelar"
+msgstr ""
+
+#: admin/views/import-wizard.php:140
+msgid "Archivo .wpcontent"
+msgstr ""
+
+#: admin/views/import-wizard.php:145
+msgid "Selecciona un paquete generado por Exportación Selectiva."
+msgstr ""
+
+#: admin/views/import-wizard.php:150
+msgid "Analizar archivo"
+msgstr ""
+
+#: includes/class-plugin.php:78
+msgid "Author site"
+msgstr ""
+
+#: includes/class-plugin.php:84
+msgid "Support"
+msgstr ""
+
+#: includes/export/class-exporter.php:69
+msgid "No se seleccionaron elementos para exportar."
+msgstr ""
+
+#: includes/export/class-exporter.php:92
+msgid "No se pudo serializar el contenido seleccionado."
+msgstr ""
+
+#: includes/functions.php:30
+msgid "No se pudo crear el directorio temporal."
+msgstr ""
+
+#: includes/functions.php:82
+msgid "El archivo de exportación no existe."
+msgstr ""
+
+#: includes/import/class-conflict-resolver.php:67
+msgid "Nuevo"
+msgstr ""
+
+#: includes/import/class-conflict-resolver.php:74
+msgid "Ya existe"
+msgstr ""
+
+#: includes/import/class-importer.php:128
+msgid "La sesión de importación ha expirado. Vuelve a subir el archivo."
+msgstr ""
+
+#: includes/package/class-wpcontent-package.php:30
+msgid "La extensión ZipArchive de PHP es necesaria para exportar."
+msgstr ""
+
+#: includes/package/class-wpcontent-package.php:45
+msgid "No se pudo crear el directorio temporal de exportación."
+msgstr ""
+
+#: includes/package/class-wpcontent-package.php:109
+msgid "No se pudo crear el archivo de exportación."
+msgstr ""
+
+#: includes/package/class-wpcontent-package.php:131
+msgid "La extensión ZipArchive de PHP es necesaria para importar."
+msgstr ""
+
+#: includes/package/class-wpcontent-package.php:146
+msgid "No se pudo crear el directorio temporal de importación."
+msgstr ""
+
+#: includes/package/class-wpcontent-package.php:155
+msgid "No se pudo abrir el archivo .wpcontent."
+msgstr ""
+
+#: includes/package/class-wpcontent-package.php:168
+msgid "El paquete no contiene un manifiesto válido."
+msgstr ""
+
+#: includes/package/class-wpcontent-package.php:178
+msgid "El manifiesto del paquete no es válido."
+msgstr ""
