@@ -3,7 +3,7 @@
  * Plugin Name:       Exportación Selectiva
  * Plugin URI:        https://github.com/ahernandezfriz/exportacion-selectiva
  * Description:       Selectively export and import pages, posts, and custom post types from the admin list tables.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.9
  * Requires PHP:      7.4
  * Author:            Ariel Hernández Friz
@@ -19,12 +19,14 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'AHF_ES_VERSION', '1.1.0' );
+define( 'AHF_ES_VERSION', '1.2.0' );
 define( 'AHF_ES_PLUGIN_FILE', __FILE__ );
 define( 'AHF_ES_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AHF_ES_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AHF_ES_FORMAT_VERSION', '1.0' );
 define( 'AHF_ES_BULK_ACTION', 'ahf_es_export' );
+define( 'AHF_ES_BATCH_SIZE', 5 );
+define( 'AHF_ES_SYNC_LIMIT', 5 );
 
 require_once AHF_ES_PLUGIN_DIR . 'includes/class-autoloader.php';
 require_once AHF_ES_PLUGIN_DIR . 'includes/functions.php';

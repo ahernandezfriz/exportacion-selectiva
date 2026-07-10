@@ -8,7 +8,9 @@
 namespace AHF\ExportacionSelectiva;
 
 use AHF\ExportacionSelectiva\Admin\Admin_Notices;
+use AHF\ExportacionSelectiva\Admin\Ajax_Handler;
 use AHF\ExportacionSelectiva\Admin\Bulk_Export;
+use AHF\ExportacionSelectiva\Admin\Export_Progress;
 use AHF\ExportacionSelectiva\Admin\Import_Wizard;
 
 defined( 'ABSPATH' ) || exit;
@@ -53,9 +55,12 @@ final class Plugin {
 	private function init_components(): void {
 		add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
 
+		new Ajax_Handler();
+
 		if ( is_admin() ) {
 			new Bulk_Export();
 			new Import_Wizard();
+			new Export_Progress();
 			new Admin_Notices();
 		}
 	}

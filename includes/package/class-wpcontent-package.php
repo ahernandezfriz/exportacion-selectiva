@@ -159,6 +159,16 @@ class Wpcontent_Package {
 		$zip->extractTo( $extract_dir );
 		$zip->close();
 
+		return $this->read_extracted( $extract_dir );
+	}
+
+	/**
+	 * Lee un paquete ya extraído.
+	 *
+	 * @param string $extract_dir Directorio extraído.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public function read_extracted( string $extract_dir ) {
 		$manifest_path = trailingslashit( $extract_dir ) . 'manifest.json';
 
 		if ( ! file_exists( $manifest_path ) ) {

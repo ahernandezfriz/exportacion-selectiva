@@ -52,4 +52,16 @@ class Id_Mapper {
 	public function all(): array {
 		return $this->map;
 	}
+
+	/**
+	 * Hidrata el mapa desde un array serializado.
+	 *
+	 * @param array<int|string, int> $map Mapa.
+	 * @return void
+	 */
+	public function hydrate( array $map ): void {
+		foreach ( $map as $old_id => $new_id ) {
+			$this->set( (int) $old_id, (int) $new_id );
+		}
+	}
 }

@@ -130,7 +130,7 @@ class Exporter {
 	 * @param int $post_id ID del post.
 	 * @return array<string, mixed>|null
 	 */
-	private function serialize_post( int $post_id ): ?array {
+	public function serialize_post( int $post_id ): ?array {
 		$post = get_post( $post_id );
 
 		if ( ! $post || 'attachment' === $post->post_type || 'auto-draft' === $post->post_status ) {
@@ -201,7 +201,7 @@ class Exporter {
 	 * @param int $attachment_id ID del adjunto.
 	 * @return array<string, mixed>|null
 	 */
-	private function serialize_attachment( int $attachment_id ): ?array {
+	public function serialize_attachment( int $attachment_id ): ?array {
 		$attachment = get_post( $attachment_id );
 
 		if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
@@ -239,7 +239,7 @@ class Exporter {
 	 * @param int[] $term_ids IDs de términos.
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function serialize_terms( array $term_ids ): array {
+	public function serialize_terms( array $term_ids ): array {
 		$terms_data = array();
 
 		foreach ( $term_ids as $term_id ) {

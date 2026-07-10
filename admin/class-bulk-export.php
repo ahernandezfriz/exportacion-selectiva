@@ -8,6 +8,7 @@
 namespace AHF\ExportacionSelectiva\Admin;
 
 use AHF\ExportacionSelectiva\Capabilities;
+use AHF\ExportacionSelectiva\Export\Batch_Exporter;
 use AHF\ExportacionSelectiva\Export\Exporter;
 
 defined( 'ABSPATH' ) || exit;
@@ -73,10 +74,33 @@ class Bulk_Export {
 			return add_query_arg( 'ahf_es_error', 'nonce', $redirect_url );
 		}
 
+		$post_ids = array_values( array_unique( array_map( 'absint', $post_ids ) ) );
+
 		try {
-			$post_ids = array_map( 'absint', $post_ids );
-			$exporter = new Exporter();
-			$exporter->export_and_download( $post_ids );
+			if ( count( $post_ids ) <= (int) AHF_ES_SYNC_LIMIT ) {
+				$exporter = new Exporter();
+				$exporter->export_and_download( $post_ids );
+			}
+
+			$job_id = ( new Batch_Exporter() )->create_job( $post_ids );
+
+			if ( is_wp_error( $job_id ) ) {
+				return add_query_arg(
+					array(
+						'ahf_es_error' => 'export_failed',
+						'ahf_es_msg'   => rawurlencode( $job_id->get_error_message() ),
+					),
+					$redirect_url
+				);
+			}
+
+			return add_query_arg(
+				array(
+					'page'   => Export_Progress::PAGE_SLUG,
+					'job_id' => $job_id,
+				),
+				admin_url( 'admin.php' )
+			);
 		} catch ( \Throwable $exception ) {
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
@@ -91,7 +115,5 @@ class Bulk_Export {
 				$redirect_url
 			);
 		}
-
-		return $redirect_url;
 	}
 }

@@ -8,7 +8,6 @@
 namespace AHF\ExportacionSelectiva\Admin;
 
 use AHF\ExportacionSelectiva\Capabilities;
-use AHF\ExportacionSelectiva\Import\Conflict_Resolver;
 use AHF\ExportacionSelectiva\Import\Importer;
 
 defined( 'ABSPATH' ) || exit;
@@ -122,6 +121,26 @@ class Import_Wizard {
 			AHF_ES_VERSION,
 			true
 		);
+
+		$post_type = isset( $_GET['post_type'] ) ? sanitize_key( wp_unslash( $_GET['post_type'] ) ) : 'post'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		wp_localize_script(
+			'ahf-es-admin',
+			'ahfEsAdmin',
+			array(
+				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'ahf_es_batch' ),
+				'mode'     => 'import',
+				'postType' => $post_type,
+				'listUrl'  => add_query_arg( array( 'post_type' => $post_type ), admin_url( 'edit.php' ) ),
+				'i18n'     => array(
+					'processing' => __( 'Importando contenido…', 'exportacion-selectiva' ),
+					'done'       => __( 'Importación completada.', 'exportacion-selectiva' ),
+					'error'      => __( 'Error durante la importación.', 'exportacion-selectiva' ),
+					'back'       => __( 'Volver al listado', 'exportacion-selectiva' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -136,25 +155,10 @@ class Import_Wizard {
 
 		$post_type = isset( $_GET['post_type'] ) ? sanitize_key( wp_unslash( $_GET['post_type'] ) ) : 'post'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		$analysis  = null;
-		$result    = null;
-		$importer  = new Importer();
+		$analysis = null;
+		$importer = new Importer();
 
-		if ( isset( $_POST['ahf_es_import_submit'] ) ) {
-			check_admin_referer( 'ahf_es_import', 'ahf_es_import_nonce' );
-
-			$session_key = isset( $_POST['ahf_es_session_key'] ) ? sanitize_text_field( wp_unslash( $_POST['ahf_es_session_key'] ) ) : '';
-			$indexes     = isset( $_POST['ahf_es_items'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['ahf_es_items'] ) ) : array();
-			$policy      = isset( $_POST['ahf_es_conflict_policy'] ) ? sanitize_key( wp_unslash( $_POST['ahf_es_conflict_policy'] ) ) : Conflict_Resolver::POLICY_SKIP;
-
-			$import_result = $importer->import( $session_key, $indexes, $policy, $post_type );
-
-			if ( is_wp_error( $import_result ) ) {
-				add_settings_error( 'ahf_es_import', 'ahf_es_import_error', $import_result->get_error_message(), 'error' );
-			} else {
-				$result = $import_result;
-			}
-		} elseif ( isset( $_POST['ahf_es_analyze_submit'] ) ) {
+		if ( isset( $_POST['ahf_es_analyze_submit'] ) ) {
 			check_admin_referer( 'ahf_es_import_upload', 'ahf_es_upload_nonce' );
 
 			if ( empty( $_FILES['ahf_es_file']['tmp_name'] ) ) {
@@ -188,7 +192,6 @@ class Import_Wizard {
 		$view_data = array(
 			'post_type' => $post_type,
 			'analysis'  => $analysis,
-			'result'    => $result,
 		);
 
 		include AHF_ES_PLUGIN_DIR . 'admin/views/import-wizard.php';

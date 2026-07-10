@@ -2,14 +2,14 @@
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Exportación Selectiva 1.1.0\n"
+"Project-Id-Version: Exportación Selectiva 1.2.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/exportacion-selectiva\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-10T22:56:21+02:00\n"
+"POT-Creation-Date: 2026-07-10T23:13:06+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: exportacion-selectiva\n"
@@ -40,6 +40,9 @@ msgid "https://arielhf.cl"
 msgstr ""
 
 #: admin/class-admin-notices.php:39
+#: admin/class-ajax-handler.php:39
+#: admin/class-ajax-handler.php:119
+#: admin/class-export-progress.php:102
 msgid "No tienes permisos para exportar contenido."
 msgstr ""
 
@@ -55,126 +58,224 @@ msgstr ""
 msgid "Ocurrió un error durante la exportación."
 msgstr ""
 
-#: admin/class-bulk-export.php:50
-msgid "Exportar"
+#: admin/class-ajax-handler.php:47
+#: admin/class-ajax-handler.php:100
+msgid "Trabajo no válido."
 msgstr ""
 
-#: admin/class-import-wizard.php:44
-#: admin/class-import-wizard.php:45
-#: admin/views/import-wizard.php:20
-msgid "Importar contenido"
-msgstr ""
-
-#: admin/class-import-wizard.php:90
-msgid "Importar"
-msgstr ""
-
-#: admin/class-import-wizard.php:134
-#: includes/import/class-importer.php:119
+#: admin/class-ajax-handler.php:66
+#: admin/class-ajax-handler.php:92
+#: admin/class-import-wizard.php:153
+#: includes/import/class-batch-importer.php:34
+#: includes/import/class-importer.php:120
 msgid "No tienes permisos para importar contenido."
 msgstr ""
 
-#: admin/class-import-wizard.php:164
+#: admin/class-ajax-handler.php:129
+msgid "El archivo de exportación no está disponible."
+msgstr ""
+
+#: admin/class-bulk-export.php:51
+msgid "Exportar"
+msgstr ""
+
+#: admin/class-export-progress.php:41
+#: admin/class-export-progress.php:42
+#: admin/views/export-progress.php:14
+msgid "Exportando contenido"
+msgstr ""
+
+#: admin/class-export-progress.php:86
+msgid "Procesando exportación…"
+msgstr ""
+
+#: admin/class-export-progress.php:87
+#: includes/export/class-batch-exporter.php:167
+msgid "Exportación completada."
+msgstr ""
+
+#: admin/class-export-progress.php:88
+msgid "Error durante la exportación."
+msgstr ""
+
+#: admin/class-export-progress.php:89
+#: admin/views/export-progress.php:28
+msgid "Descargar archivo"
+msgstr ""
+
+#: admin/class-import-wizard.php:43
+#: admin/class-import-wizard.php:44
+#: admin/views/import-wizard.php:19
+msgid "Importar contenido"
+msgstr ""
+
+#: admin/class-import-wizard.php:89
+msgid "Importar"
+msgstr ""
+
+#: admin/class-import-wizard.php:137
+#: admin/views/import-wizard.php:44
+msgid "Importando contenido…"
+msgstr ""
+
+#: admin/class-import-wizard.php:138
+#: includes/import/class-batch-importer.php:186
+msgid "Importación completada."
+msgstr ""
+
+#: admin/class-import-wizard.php:139
+msgid "Error durante la importación."
+msgstr ""
+
+#: admin/class-import-wizard.php:140
+#: admin/views/import-wizard.php:38
+#: admin/views/import-wizard.php:187
+msgid "Volver al listado"
+msgstr ""
+
+#: admin/class-import-wizard.php:168
 msgid "Debes seleccionar un archivo .wpcontent."
 msgstr ""
 
-#: admin/class-import-wizard.php:174
+#: admin/class-import-wizard.php:178
 msgid "No se pudo subir el archivo."
 msgstr ""
 
+#: admin/views/export-progress.php:18
+msgid "No se encontró el trabajo de exportación."
+msgstr ""
+
+#: admin/views/export-progress.php:22
+msgid "Preparando exportación…"
+msgstr ""
+
 #. translators: %s: post type label
-#: admin/views/import-wizard.php:26
+#: admin/views/import-wizard.php:25
 #, php-format
 msgid "Importa contenido selectivo al listado de %s."
 msgstr ""
 
-#. translators: 1: created count, 2: updated count, 3: duplicated count, 4: skipped count
-#: admin/views/import-wizard.php:40
-#, php-format
-msgid "Importación completada. Creados: %1$d. Actualizados: %2$d. Duplicados: %3$d. Omitidos: %4$d."
+#: admin/views/import-wizard.php:34
+msgid "Resultado"
 msgstr ""
 
-#: admin/views/import-wizard.php:51
-#: admin/views/import-wizard.php:153
-msgid "Volver al listado"
-msgstr ""
-
-#: admin/views/import-wizard.php:56
+#: admin/views/import-wizard.php:53
 msgid "Contenido detectado"
 msgstr ""
 
-#: admin/views/import-wizard.php:61
+#: admin/views/import-wizard.php:58
 msgid "Origen:"
 msgstr ""
 
-#: admin/views/import-wizard.php:65
+#: admin/views/import-wizard.php:62
 msgid "Exportado:"
 msgstr ""
 
-#: admin/views/import-wizard.php:69
+#: admin/views/import-wizard.php:66
 msgid "Elementos:"
 msgstr ""
 
-#: admin/views/import-wizard.php:85
+#: admin/views/import-wizard.php:82
+#: admin/views/import-wizard.php:107
 msgid "Título"
 msgstr ""
 
-#: admin/views/import-wizard.php:86
+#: admin/views/import-wizard.php:83
+#: admin/views/import-wizard.php:116
 msgid "Slug"
 msgstr ""
 
-#: admin/views/import-wizard.php:87
+#: admin/views/import-wizard.php:84
 msgid "Estado"
 msgstr ""
 
-#: admin/views/import-wizard.php:108
-msgid "Si el contenido ya existe"
+#: admin/views/import-wizard.php:85
+msgid "Comparación"
+msgstr ""
+
+#: admin/views/import-wizard.php:104
+msgid "Ver diferencias"
 msgstr ""
 
 #: admin/views/import-wizard.php:112
+msgid "(diferente)"
+msgstr ""
+
+#: admin/views/import-wizard.php:122
+msgid "Fecha"
+msgstr ""
+
+#: admin/views/import-wizard.php:138
+msgid "Si el contenido ya existe"
+msgstr ""
+
+#: admin/views/import-wizard.php:142
 msgid "Omitir"
 msgstr ""
 
-#: admin/views/import-wizard.php:116
+#: admin/views/import-wizard.php:146
 msgid "Actualizar"
 msgstr ""
 
-#: admin/views/import-wizard.php:120
+#: admin/views/import-wizard.php:150
 msgid "Duplicar"
 msgstr ""
 
-#: admin/views/import-wizard.php:126
+#: admin/views/import-wizard.php:154
+msgid "Comparar diferencias (omitir existentes tras revisar)"
+msgstr ""
+
+#: admin/views/import-wizard.php:160
 msgid "Importar selección"
 msgstr ""
 
-#: admin/views/import-wizard.php:129
+#: admin/views/import-wizard.php:163
 msgid "Cancelar"
 msgstr ""
 
-#: admin/views/import-wizard.php:140
+#: admin/views/import-wizard.php:174
 msgid "Archivo .wpcontent"
 msgstr ""
 
-#: admin/views/import-wizard.php:145
+#: admin/views/import-wizard.php:179
 msgid "Selecciona un paquete generado por Exportación Selectiva."
 msgstr ""
 
-#: admin/views/import-wizard.php:150
+#: admin/views/import-wizard.php:184
 msgid "Analizar archivo"
 msgstr ""
 
-#: includes/class-plugin.php:78
+#: includes/class-batch-job.php:72
+msgid "El trabajo ha expirado o no existe."
+msgstr ""
+
+#: includes/class-batch-job.php:79
+msgid "No tienes permiso para este trabajo."
+msgstr ""
+
+#: includes/class-plugin.php:83
 msgid "Author site"
 msgstr ""
 
-#: includes/class-plugin.php:84
+#: includes/class-plugin.php:89
 msgid "Support"
 msgstr ""
 
+#: includes/export/class-batch-exporter.php:32
 #: includes/export/class-exporter.php:69
 msgid "No se seleccionaron elementos para exportar."
 msgstr ""
 
+#: includes/export/class-batch-exporter.php:47
+#: includes/package/class-wpcontent-package.php:45
+msgid "No se pudo crear el directorio temporal de exportación."
+msgstr ""
+
+#: includes/export/class-batch-exporter.php:90
+msgid "La exportación falló."
+msgstr ""
+
+#: includes/export/class-batch-exporter.php:186
 #: includes/export/class-exporter.php:92
 msgid "No se pudo serializar el contenido seleccionado."
 msgstr ""
@@ -187,24 +288,25 @@ msgstr ""
 msgid "El archivo de exportación no existe."
 msgstr ""
 
-#: includes/import/class-conflict-resolver.php:67
+#: includes/import/class-batch-importer.php:43
+#: includes/import/class-importer.php:129
+msgid "La sesión de importación ha expirado. Vuelve a subir el archivo."
+msgstr ""
+
+#: includes/import/class-conflict-resolver.php:64
 msgid "Nuevo"
 msgstr ""
 
-#: includes/import/class-conflict-resolver.php:74
-msgid "Ya existe"
+#: includes/import/class-conflict-resolver.php:92
+msgid "Ya existe (con diferencias)"
 msgstr ""
 
-#: includes/import/class-importer.php:128
-msgid "La sesión de importación ha expirado. Vuelve a subir el archivo."
+#: includes/import/class-conflict-resolver.php:92
+msgid "Ya existe"
 msgstr ""
 
 #: includes/package/class-wpcontent-package.php:30
 msgid "La extensión ZipArchive de PHP es necesaria para exportar."
-msgstr ""
-
-#: includes/package/class-wpcontent-package.php:45
-msgid "No se pudo crear el directorio temporal de exportación."
 msgstr ""
 
 #: includes/package/class-wpcontent-package.php:109
@@ -223,10 +325,10 @@ msgstr ""
 msgid "No se pudo abrir el archivo .wpcontent."
 msgstr ""
 
-#: includes/package/class-wpcontent-package.php:168
+#: includes/package/class-wpcontent-package.php:178
 msgid "El paquete no contiene un manifiesto válido."
 msgstr ""
 
-#: includes/package/class-wpcontent-package.php:178
+#: includes/package/class-wpcontent-package.php:188
 msgid "El manifiesto del paquete no es válido."
 msgstr ""

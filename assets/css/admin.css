@@ -42,3 +42,31 @@
 	display: inline-block;
 	margin-bottom: 8px;
 }
+
+.ahf-es-progress-bar {
+	background: #dcdcde;
+	border-radius: 999px;
+	height: 12px;
+	margin: 16px 0 8px;
+	overflow: hidden;
+}
+
+.ahf-es-progress-bar-fill {
+	background: #2271b1;
+	display: block;
+	height: 100%;
+	transition: width 0.2s ease;
+}
+
+.ahf-es-progress-meta {
+	color: #646970;
+	margin: 0;
+}
+
+.ahf-es-compare {
+	font-size: 12px;
+}
+
+.ahf-es-compare ul {
+	margin: 8px 0 0 16px;
+}

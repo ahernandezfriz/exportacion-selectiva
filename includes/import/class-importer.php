@@ -68,6 +68,7 @@ class Importer {
 				'status'      => $conflict['status'],
 				'existing_id' => $conflict['existing_id'],
 				'message'     => $conflict['message'],
+				'comparison'  => $conflict['comparison'] ?? null,
 			);
 		}
 
@@ -140,10 +141,11 @@ class Importer {
 		$policy    = $conflicts->sanitize_policy( $policy );
 		$mapper    = new Id_Mapper();
 		$counts    = array(
-			'created'   => 0,
-			'updated'   => 0,
-			'skipped'   => 0,
-			'duplicated'=> 0,
+			'created'    => 0,
+			'updated'    => 0,
+			'skipped'    => 0,
+			'duplicated' => 0,
+			'compared'   => 0,
 		);
 
 		$this->import_terms( $data['terms'], $mapper );
@@ -156,59 +158,16 @@ class Importer {
 				continue;
 			}
 
-			$item     = $data['posts'][ $index ];
-			$conflict = $conflicts->detect( $item );
+			$result_key = $this->import_single_item( $data['posts'][ $index ], $policy, $target_post_type, $mapper );
 
-			if ( 'exists' === $conflict['status'] && Conflict_Resolver::POLICY_SKIP === $policy ) {
-				++$counts['skipped'];
-				$mapper->set( (int) $item['source_id'], $conflict['existing_id'] );
-				continue;
-			}
-
-			$postarr = $this->build_postarr( $item, $target_post_type, $mapper );
-
-			if ( 'exists' === $conflict['status'] && Conflict_Resolver::POLICY_UPDATE === $policy ) {
-				$postarr['ID'] = $conflict['existing_id'];
-				$post_id       = wp_update_post( $postarr, true );
-				++$counts['updated'];
-			} elseif ( 'exists' === $conflict['status'] && Conflict_Resolver::POLICY_DUPLICATE === $policy ) {
-				unset( $postarr['ID'] );
-				$postarr['post_title'] = $item['post_title'] . ' duplicated';
-				$postarr['post_name']  = wp_unique_post_slug(
-					$item['post_name'] . '-duplicated',
-					0,
-					$item['post_status'],
-					$target_post_type,
-					0
-				);
-				$post_id = wp_insert_post( $postarr, true );
-				++$counts['duplicated'];
+			if ( isset( $counts[ $result_key ] ) ) {
+				++$counts[ $result_key ];
 			} else {
-				$post_id = wp_insert_post( $postarr, true );
-				++$counts['created'];
-			}
-
-			if ( is_wp_error( $post_id ) || ! $post_id ) {
 				++$counts['skipped'];
-				continue;
 			}
-
-			$mapper->set( (int) $item['source_id'], (int) $post_id );
-			$this->import_post_meta( (int) $post_id, $item['meta'] ?? array(), $mapper );
-			$this->import_post_terms( (int) $post_id, $item['terms'] ?? array() );
-			$this->import_thumbnail( (int) $post_id, (int) ( $item['thumbnail_id'] ?? 0 ), $mapper );
-			$this->import_adapters( (int) $post_id, $item['adapters'] ?? array(), $mapper );
 		}
 
-		delete_transient( $session_key );
-
-		if ( ! empty( $session['zip_path'] ) && file_exists( $session['zip_path'] ) ) {
-			wp_delete_file( $session['zip_path'] );
-		}
-
-		if ( ! empty( $data['extract_dir'] ) ) {
-			ahf_es_delete_directory( $data['extract_dir'] );
-		}
+		$this->cleanup_session( $session, $data, $session_key );
 
 		return $counts;
 	}
@@ -220,7 +179,7 @@ class Importer {
 	 * @param Id_Mapper                        $mapper Mapa de IDs.
 	 * @return void
 	 */
-	private function import_terms( array $terms, Id_Mapper $mapper ): void {
+	public function import_terms( array $terms, Id_Mapper $mapper ): void {
 		foreach ( $terms as $term_data ) {
 			$existing = term_exists( $term_data['slug'], $term_data['taxonomy'] );
 
@@ -246,6 +205,28 @@ class Importer {
 	}
 
 	/**
+	 * Importa un lote de archivos multimedia.
+	 *
+	 * @param array<int, array<string, mixed>> $media Lista de medios.
+	 * @param string                           $extract_dir Directorio extraído.
+	 * @param Id_Mapper                        $mapper Mapa de IDs.
+	 * @param int                              $offset Offset.
+	 * @param int                              $limit Límite.
+	 * @return int Cantidad procesada en este lote.
+	 */
+	public function import_media_batch( array $media, string $extract_dir, Id_Mapper $mapper, int $offset, int $limit ): int {
+		$slice     = array_slice( $media, $offset, $limit );
+		$processed = 0;
+
+		foreach ( $slice as $attachment_data ) {
+			$this->import_single_media( $attachment_data, $extract_dir, $mapper );
+			++$processed;
+		}
+
+		return $processed;
+	}
+
+	/**
 	 * Importa archivos multimedia del paquete.
 	 *
 	 * @param array<int, array<string, mixed>> $media Lista de medios.
@@ -253,53 +234,143 @@ class Importer {
 	 * @param Id_Mapper                        $mapper Mapa de IDs.
 	 * @return void
 	 */
-	private function import_media( array $media, string $extract_dir, Id_Mapper $mapper ): void {
-		foreach ( $media as $attachment_data ) {
-			$source_file = trailingslashit( $extract_dir ) . 'media/files/' . $attachment_data['file'];
+	public function import_media( array $media, string $extract_dir, Id_Mapper $mapper ): void {
+		$this->import_media_batch( $media, $extract_dir, $mapper, 0, count( $media ) );
+	}
 
-			if ( ! file_exists( $source_file ) ) {
-				continue;
+	/**
+	 * Importa un adjunto individual.
+	 *
+	 * @param array<string, mixed> $attachment_data Datos.
+	 * @param string               $extract_dir Directorio.
+	 * @param Id_Mapper            $mapper Mapa.
+	 * @return void
+	 */
+	public function import_single_media( array $attachment_data, string $extract_dir, Id_Mapper $mapper ): void {
+		$source_file = trailingslashit( $extract_dir ) . 'media/files/' . $attachment_data['file'];
+
+		if ( ! file_exists( $source_file ) ) {
+			return;
+		}
+
+		$upload = wp_upload_bits(
+			basename( $source_file ),
+			null,
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			file_get_contents( $source_file )
+		);
+
+		if ( ! empty( $upload['error'] ) ) {
+			return;
+		}
+
+		$attachment = array(
+			'post_title'     => $attachment_data['post_title'],
+			'post_name'      => $attachment_data['post_name'],
+			'post_mime_type' => $attachment_data['post_mime_type'],
+			'post_content'   => $attachment_data['post_content'] ?? '',
+			'post_excerpt'   => $attachment_data['post_excerpt'] ?? '',
+			'post_status'    => 'inherit',
+			'guid'           => $upload['url'],
+		);
+
+		$attachment_id = wp_insert_attachment( $attachment, $upload['file'] );
+
+		if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
+			return;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$metadata = wp_generate_attachment_metadata( $attachment_id, $upload['file'] );
+		wp_update_attachment_metadata( $attachment_id, $metadata );
+
+		if ( ! empty( $attachment_data['meta'] ) && is_array( $attachment_data['meta'] ) ) {
+			foreach ( $attachment_data['meta'] as $meta_key => $meta_value ) {
+				update_post_meta( $attachment_id, $meta_key, $meta_value );
 			}
+		}
 
-			$upload = wp_upload_bits(
-				basename( $source_file ),
-				null,
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-				file_get_contents( $source_file )
+		$mapper->set( (int) $attachment_data['source_id'], (int) $attachment_id );
+	}
+
+	/**
+	 * Importa un ítem de post según la política de conflicto.
+	 *
+	 * @param array<string, mixed> $item Datos del item.
+	 * @param string               $policy Política.
+	 * @param string               $target_post_type Post type.
+	 * @param Id_Mapper            $mapper Mapa.
+	 * @return string Resultado: created|updated|skipped|duplicated|compared.
+	 */
+	public function import_single_item( array $item, string $policy, string $target_post_type, Id_Mapper $mapper ): string {
+		$conflicts = new Conflict_Resolver();
+		$policy    = $conflicts->sanitize_policy( $policy );
+		$conflict  = $conflicts->detect( $item );
+
+		if ( 'exists' === $conflict['status'] && in_array( $policy, array( Conflict_Resolver::POLICY_SKIP, Conflict_Resolver::POLICY_COMPARE ), true ) ) {
+			$mapper->set( (int) $item['source_id'], $conflict['existing_id'] );
+			return Conflict_Resolver::POLICY_COMPARE === $policy ? 'compared' : 'skipped';
+		}
+
+		$postarr = $this->build_postarr( $item, $target_post_type, $mapper );
+		$result  = 'created';
+
+		if ( 'exists' === $conflict['status'] && Conflict_Resolver::POLICY_UPDATE === $policy ) {
+			$postarr['ID'] = $conflict['existing_id'];
+			$post_id       = wp_update_post( $postarr, true );
+			$result        = 'updated';
+		} elseif ( 'exists' === $conflict['status'] && Conflict_Resolver::POLICY_DUPLICATE === $policy ) {
+			unset( $postarr['ID'] );
+			$postarr['post_title'] = $item['post_title'] . ' duplicated';
+			$postarr['post_name']  = wp_unique_post_slug(
+				$item['post_name'] . '-duplicated',
+				0,
+				$item['post_status'],
+				$target_post_type,
+				0
 			);
+			$post_id = wp_insert_post( $postarr, true );
+			$result  = 'duplicated';
+		} else {
+			$post_id = wp_insert_post( $postarr, true );
+			$result  = 'created';
+		}
 
-			if ( ! empty( $upload['error'] ) ) {
-				continue;
-			}
+		if ( is_wp_error( $post_id ) || ! $post_id ) {
+			return 'skipped';
+		}
 
-			$attachment = array(
-				'post_title'     => $attachment_data['post_title'],
-				'post_name'      => $attachment_data['post_name'],
-				'post_mime_type' => $attachment_data['post_mime_type'],
-				'post_content'   => $attachment_data['post_content'] ?? '',
-				'post_excerpt'   => $attachment_data['post_excerpt'] ?? '',
-				'post_status'    => 'inherit',
-				'guid'           => $upload['url'],
-			);
+		$mapper->set( (int) $item['source_id'], (int) $post_id );
+		$this->import_post_meta( (int) $post_id, $item['meta'] ?? array(), $mapper );
+		$this->import_post_terms( (int) $post_id, $item['terms'] ?? array() );
+		$this->import_thumbnail( (int) $post_id, (int) ( $item['thumbnail_id'] ?? 0 ), $mapper );
+		$this->import_adapters( (int) $post_id, $item['adapters'] ?? array(), $mapper );
 
-			$attachment_id = wp_insert_attachment( $attachment, $upload['file'] );
+		return $result;
+	}
 
-			if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
-				continue;
-			}
+	/**
+	 * Limpia archivos temporales de una sesión de importación.
+	 *
+	 * @param array<string, mixed> $session Sesión.
+	 * @param array<string, mixed> $data Datos del paquete leído.
+	 * @param string               $session_key Clave transient.
+	 * @return void
+	 */
+	public function cleanup_session( array $session, array $data, string $session_key ): void {
+		delete_transient( $session_key );
 
-			require_once ABSPATH . 'wp-admin/includes/image.php';
+		if ( ! empty( $session['zip_path'] ) && file_exists( $session['zip_path'] ) ) {
+			wp_delete_file( $session['zip_path'] );
+		}
 
-			$metadata = wp_generate_attachment_metadata( $attachment_id, $upload['file'] );
-			wp_update_attachment_metadata( $attachment_id, $metadata );
+		if ( ! empty( $data['extract_dir'] ) ) {
+			ahf_es_delete_directory( $data['extract_dir'] );
+		}
 
-			if ( ! empty( $attachment_data['meta'] ) && is_array( $attachment_data['meta'] ) ) {
-				foreach ( $attachment_data['meta'] as $meta_key => $meta_value ) {
-					update_post_meta( $attachment_id, $meta_key, $meta_value );
-				}
-			}
-
-			$mapper->set( (int) $attachment_data['source_id'], (int) $attachment_id );
+		if ( ! empty( $session['extract_dir'] ) && is_dir( $session['extract_dir'] ) ) {
+			ahf_es_delete_directory( $session['extract_dir'] );
 		}
 	}
 

@@ -5,7 +5,7 @@ Tags: export, import, migration, content, pages
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,12 +24,16 @@ Author: Ariel Hernández Friz — https://arielhf.cl — hola@arielhf.cl
 3. In **Bulk actions**, choose **Export**.
 4. Download the generated `.wpcontent` file.
 
+Large selections are processed in background batches with a progress screen to avoid timeouts.
+
 = Import =
 
 1. On the same list screen, click **Import**.
 2. Upload a `.wpcontent` file.
-3. Review the detected content.
+3. Review the detected content and compare differences when items already exist.
 4. Choose which items to import and how to resolve conflicts.
+
+Imports also run in batches with a progress bar for large packages.
 
 = What the package includes =
 
@@ -44,6 +48,7 @@ Author: Ariel Hernández Friz — https://arielhf.cl — hola@arielhf.cl
 * Skip
 * Update
 * Duplicate
+* Compare differences (review title/slug/date, then skip existing items)
 
 = Compatibility =
 
@@ -91,9 +96,15 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 
 1. Bulk Export action on the pages list.
 2. Import button on the content list screen.
-3. Import wizard with item selection.
+3. Import wizard with item selection and difference comparison.
+4. Background export/import progress screen.
 
 == Changelog ==
+
+= 1.2.0 =
+* Background batch processing for large exports and imports (AJAX progress).
+* Added Compare differences conflict policy with title/slug/date review.
+* Added WordPress.org banner and icon assets under `.wordpress-org/`.
 
 = 1.1.0 =
 * Added Elementor adapter with media ID remapping and CSS cache refresh.
@@ -108,6 +119,9 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 * `.wpcontent` format version 1.0.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Adds background batch processing and compare-differences conflict review.
 
 = 1.1.0 =
 Adds Elementor and ACF adapters with media/relationship ID remapping.

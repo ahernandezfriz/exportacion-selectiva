@@ -20,16 +20,13 @@ class Conflict_Resolver {
 	public const POLICY_SKIP      = 'skip';
 	public const POLICY_UPDATE    = 'update';
 	public const POLICY_DUPLICATE = 'duplicate';
+	public const POLICY_COMPARE   = 'compare';
 
 	/**
 	 * Detecta si existe un conflicto para un item importado.
 	 *
 	 * @param array<string, mixed> $item Datos del item.
-	 * @return array{
-	 *     status: string,
-	 *     existing_id: int,
-	 *     message: string
-	 * }
+	 * @return array<string, mixed>
 	 */
 	public function detect( array $item ): array {
 		$existing = get_posts(
@@ -65,13 +62,35 @@ class Conflict_Resolver {
 				'status'      => 'new',
 				'existing_id' => 0,
 				'message'     => __( 'Nuevo', 'exportacion-selectiva' ),
+				'comparison'  => null,
 			);
 		}
+
+		$comparison = array(
+			'title' => array(
+				'incoming' => (string) $item['post_title'],
+				'existing' => (string) $existing->post_title,
+				'differs'  => (string) $item['post_title'] !== (string) $existing->post_title,
+			),
+			'slug'  => array(
+				'incoming' => (string) $item['post_name'],
+				'existing' => (string) $existing->post_name,
+				'differs'  => (string) $item['post_name'] !== (string) $existing->post_name,
+			),
+			'date'  => array(
+				'incoming' => (string) ( $item['post_date_gmt'] ?? '' ),
+				'existing' => (string) $existing->post_modified_gmt,
+				'differs'  => ! empty( $item['post_date_gmt'] ) && (string) $item['post_date_gmt'] !== (string) $existing->post_modified_gmt,
+			),
+		);
+
+		$has_diff = $comparison['title']['differs'] || $comparison['slug']['differs'] || $comparison['date']['differs'];
 
 		return array(
 			'status'      => 'exists',
 			'existing_id' => (int) $existing->ID,
-			'message'     => __( 'Ya existe', 'exportacion-selectiva' ),
+			'message'     => $has_diff ? __( 'Ya existe (con diferencias)', 'exportacion-selectiva' ) : __( 'Ya existe', 'exportacion-selectiva' ),
+			'comparison'  => $comparison,
 		);
 	}
 
@@ -86,6 +105,7 @@ class Conflict_Resolver {
 			self::POLICY_SKIP,
 			self::POLICY_UPDATE,
 			self::POLICY_DUPLICATE,
+			self::POLICY_COMPARE,
 		);
 
 		return in_array( $policy, $allowed, true ) ? $policy : self::POLICY_SKIP;
