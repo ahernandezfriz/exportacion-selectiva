@@ -119,9 +119,12 @@ class Ajax_Handler {
 			wp_die( esc_html__( 'No tienes permisos para exportar contenido.', 'exportacion-selectiva' ) );
 		}
 
-		$job_id = isset( $_GET['job_id'] ) ? sanitize_text_field( wp_unslash( $_GET['job_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$job_id = isset( $_GET['job_id'] ) ? sanitize_text_field( wp_unslash( $_GET['job_id'] ) ) : '';
+		$nonce  = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 
-		check_admin_referer( 'ahf_es_download_' . $job_id );
+		if ( ! $job_id || ! wp_verify_nonce( $nonce, 'ahf_es_download_' . $job_id ) ) {
+			wp_die( esc_html__( 'El enlace de descarga no es válido o ha caducado. Vuelve a exportar el contenido.', 'exportacion-selectiva' ) );
+		}
 
 		$job = Batch_Job::get( $job_id );
 

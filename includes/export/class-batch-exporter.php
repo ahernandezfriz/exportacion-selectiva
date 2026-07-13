@@ -256,15 +256,15 @@ class Batch_Exporter {
 		);
 
 		if ( 'done' === $job['status'] && ! empty( $job['result']['filename'] ) ) {
-			$payload['download_url'] = wp_nonce_url(
-				add_query_arg(
-					array(
-						'action' => 'ahf_es_download_export',
-						'job_id' => $job['id'],
-					),
-					admin_url( 'admin-post.php' )
+			// No usar wp_nonce_url(): aplica esc_html() y convierte & en &amp;,
+			// lo que rompe el nonce al asignar la URL desde JavaScript.
+			$payload['download_url'] = add_query_arg(
+				array(
+					'action'   => 'ahf_es_download_export',
+					'job_id'   => $job['id'],
+					'_wpnonce' => wp_create_nonce( 'ahf_es_download_' . $job['id'] ),
 				),
-				'ahf_es_download_' . $job['id']
+				admin_url( 'admin-post.php' )
 			);
 		}
 
