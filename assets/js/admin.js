@@ -182,7 +182,9 @@
 					session_key: sessionKey.value,
 					policy: policyEl ? policyEl.value : 'skip',
 					post_type: window.ahfEsAdmin.postType || 'post',
-					items: items
+					items: items,
+					remap_urls: qs( '#ahf_es_remap_urls' ) && qs( '#ahf_es_remap_urls' ).checked ? '1' : '0',
+					target_url: qs( '#ahf_es_target_url' ) ? qs( '#ahf_es_target_url' ).value : ''
 				} ).then( function ( json ) {
 					if ( ! json || ! json.success ) {
 						throw new Error( ( json && json.data && json.data.message ) || window.ahfEsAdmin.i18n.error );

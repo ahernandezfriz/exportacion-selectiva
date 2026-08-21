@@ -25,9 +25,11 @@ class Batch_Importer {
 	 * @param int[]  $indexes Índices seleccionados.
 	 * @param string $policy Política de conflicto.
 	 * @param string $target_post_type Post type destino.
+	 * @param bool   $remap_urls Si se deben remapear URLs.
+	 * @param string $target_url URL destino (vacío = home_url).
 	 * @return string|\WP_Error
 	 */
-	public function create_job( string $session_key, array $indexes, string $policy, string $target_post_type ) {
+	public function create_job( string $session_key, array $indexes, string $policy, string $target_post_type, bool $remap_urls = true, string $target_url = '' ) {
 		if ( ! Capabilities::current_user_can_import() ) {
 			return new \WP_Error(
 				'ahf_es_capability',
@@ -60,6 +62,9 @@ class Batch_Importer {
 		$conflicts = new Conflict_Resolver();
 		$policy    = $conflicts->sanitize_policy( $policy );
 
+		$source_url = (string) ( $data['manifest']['source_url'] ?? ( $session['manifest']['source_url'] ?? '' ) );
+		$target_url = $target_url ? esc_url_raw( $target_url ) : home_url();
+
 		$total = 1 + count( $data['media'] ) + count( $indexes );
 
 		return Batch_Job::create(
@@ -71,6 +76,9 @@ class Batch_Importer {
 				'indexes'           => $indexes,
 				'policy'            => $policy,
 				'target_post_type'  => $target_post_type,
+				'remap_urls'        => $remap_urls,
+				'source_url'        => $source_url,
+				'target_url'        => $target_url,
 				'id_map'            => array(),
 				'counts'            => array(
 					'created'    => 0,
@@ -106,6 +114,14 @@ class Batch_Importer {
 		$importer = new Importer();
 		$mapper   = new Id_Mapper();
 		$mapper->hydrate( $job['id_map'] ?? array() );
+
+		if ( ! empty( $job['remap_urls'] ) && ! empty( $job['source_url'] ) ) {
+			$importer->set_url_remapper(
+				(string) $job['source_url'],
+				(string) ( $job['target_url'] ?? home_url() )
+			);
+		}
+
 		$package  = new Wpcontent_Package();
 
 		if ( ! empty( $job['extract_dir'] ) && is_dir( $job['extract_dir'] ) ) {

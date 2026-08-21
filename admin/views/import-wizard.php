@@ -53,10 +53,19 @@ $list_url = add_query_arg( array( 'post_type' => $post_type ), admin_url( 'edit.
 			<h2><?php esc_html_e( 'Contenido detectado', 'exportacion-selectiva' ); ?></h2>
 
 			<?php if ( ! empty( $analysis['manifest'] ) ) : ?>
+				<?php
+				$source_url = (string) ( $analysis['manifest']['source_url'] ?? '' );
+				$target_url = home_url();
+				$needs_remap = $source_url && ! \AHF\ExportacionSelectiva\Url_Remapper::is_same_site( $source_url, $target_url );
+				?>
 				<ul class="ahf-es-manifest">
 					<li>
 						<strong><?php esc_html_e( 'Origen:', 'exportacion-selectiva' ); ?></strong>
-						<?php echo esc_html( $analysis['manifest']['source_url'] ?? '' ); ?>
+						<?php echo esc_html( $source_url ); ?>
+					</li>
+					<li>
+						<strong><?php esc_html_e( 'Destino:', 'exportacion-selectiva' ); ?></strong>
+						<?php echo esc_html( $target_url ); ?>
 					</li>
 					<li>
 						<strong><?php esc_html_e( 'Exportado:', 'exportacion-selectiva' ); ?></strong>
@@ -67,6 +76,30 @@ $list_url = add_query_arg( array( 'post_type' => $post_type ), admin_url( 'edit.
 						<?php echo esc_html( (string) ( $analysis['manifest']['items_count'] ?? 0 ) ); ?>
 					</li>
 				</ul>
+
+				<div class="ahf-es-url-remap">
+					<label>
+						<input
+							type="checkbox"
+							name="ahf_es_remap_urls"
+							id="ahf_es_remap_urls"
+							value="1"
+							<?php checked( $needs_remap ); ?>
+						/>
+						<?php esc_html_e( 'Reemplazar URLs del sitio origen por las del sitio actual', 'exportacion-selectiva' ); ?>
+					</label>
+					<p class="description">
+						<?php
+						if ( $needs_remap ) {
+							esc_html_e( 'Recomendado: el paquete viene de otro dominio. Se actualizarán enlaces e imágenes en contenido y metadatos.', 'exportacion-selectiva' );
+						} else {
+							esc_html_e( 'Origen y destino parecen el mismo sitio; el remapeo suele no ser necesario, pero puedes activarlo igual.', 'exportacion-selectiva' );
+						}
+						?>
+					</p>
+					<input type="hidden" id="ahf_es_target_url" value="<?php echo esc_attr( $target_url ); ?>" />
+					<input type="hidden" id="ahf_es_source_url" value="<?php echo esc_attr( $source_url ); ?>" />
+				</div>
 			<?php endif; ?>
 
 			<form method="post" id="ahf-es-import-form">

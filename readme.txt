@@ -5,7 +5,7 @@ Tags: export, import, migration, content, pages
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,7 +33,7 @@ Large selections are processed in background batches with a progress screen to a
 3. Review the detected content and compare differences when items already exist.
 4. Choose which items to import and how to resolve conflicts.
 
-Imports also run in batches with a progress bar for large packages.
+Imports also run in batches with a progress bar for large packages. When the package comes from another domain, you can remap source URLs to the current site.
 
 = What the package includes =
 
@@ -101,6 +101,10 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 
 == Changelog ==
 
+= 1.3.0 =
+* Added optional URL remapping from package source domain to the current site.
+* Import wizard shows source/destination URLs and a remap checkbox.
+
 = 1.2.1 =
 * Fixed featured image import: keep local attachment path/metadata after upload.
 * Skip raw `_thumbnail_id` meta and assign thumbnails via remapped IDs only.
@@ -123,6 +127,9 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 * `.wpcontent` format version 1.0.
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+Adds URL remapping when importing packages from another domain.
 
 = 1.2.1 =
 Fixes featured image not loading after import.

@@ -70,3 +70,14 @@
 .ahf-es-compare ul {
 	margin: 8px 0 0 16px;
 }
+
+.ahf-es-url-remap {
+	background: #f6f7f7;
+	border-left: 4px solid #2271b1;
+	margin: 16px 0;
+	padding: 12px 16px;
+}
+
+.ahf-es-url-remap .description {
+	margin: 8px 0 0;
+}

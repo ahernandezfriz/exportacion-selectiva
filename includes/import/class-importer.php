@@ -13,6 +13,7 @@ use AHF\ExportacionSelectiva\Adapters\Elementor_Adapter;
 use AHF\ExportacionSelectiva\Adapters\Gutenberg_Adapter;
 use AHF\ExportacionSelectiva\Capabilities;
 use AHF\ExportacionSelectiva\Package\Wpcontent_Package;
+use AHF\ExportacionSelectiva\Url_Remapper;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -29,6 +30,13 @@ class Importer {
 	private $adapters;
 
 	/**
+	 * Remapeador de URLs (opcional).
+	 *
+	 * @var Url_Remapper|null
+	 */
+	private $url_remapper = null;
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -37,6 +45,27 @@ class Importer {
 			new Elementor_Adapter(),
 			new Acf_Adapter(),
 		);
+	}
+
+	/**
+	 * Configura el remapeo de URLs origen → destino.
+	 *
+	 * @param string $source_url URL origen.
+	 * @param string $target_url URL destino.
+	 * @return void
+	 */
+	public function set_url_remapper( string $source_url, string $target_url ): void {
+		$remapper = new Url_Remapper( $source_url, $target_url );
+		$this->url_remapper = $remapper->has_replacements() ? $remapper : null;
+	}
+
+	/**
+	 * Limpia el remapeador de URLs.
+	 *
+	 * @return void
+	 */
+	public function clear_url_remapper(): void {
+		$this->url_remapper = null;
 	}
 
 	/**
@@ -356,7 +385,14 @@ class Importer {
 		$this->import_post_meta( (int) $post_id, $item['meta'] ?? array(), $mapper );
 		$this->import_post_terms( (int) $post_id, $item['terms'] ?? array() );
 		$this->import_thumbnail( (int) $post_id, (int) ( $item['thumbnail_id'] ?? 0 ), $mapper );
-		$this->import_adapters( (int) $post_id, $item['adapters'] ?? array(), $mapper );
+
+		$adapters_data = $item['adapters'] ?? array();
+
+		if ( $this->url_remapper ) {
+			$adapters_data = $this->url_remapper->remap( $adapters_data );
+		}
+
+		$this->import_adapters( (int) $post_id, is_array( $adapters_data ) ? $adapters_data : array(), $mapper );
 
 		return $result;
 	}
@@ -395,14 +431,21 @@ class Importer {
 	 */
 	private function build_postarr( array $item, string $target_post_type, Id_Mapper $mapper ): array {
 		$parent_id = $mapper->get( (int) ( $item['post_parent'] ?? 0 ) );
+		$content   = $this->replace_ids_in_string( $item['post_content'] ?? '', $mapper );
+		$excerpt   = $item['post_excerpt'] ?? '';
+
+		if ( $this->url_remapper ) {
+			$content = $this->url_remapper->remap_string( $content );
+			$excerpt = $this->url_remapper->remap_string( (string) $excerpt );
+		}
 
 		return array(
 			'post_type'      => $target_post_type,
 			'post_status'    => $item['post_status'],
 			'post_title'     => $item['post_title'],
 			'post_name'      => $item['post_name'],
-			'post_content'   => $this->replace_ids_in_string( $item['post_content'] ?? '', $mapper ),
-			'post_excerpt'   => $item['post_excerpt'] ?? '',
+			'post_content'   => $content,
+			'post_excerpt'   => $excerpt,
 			'post_parent'    => $parent_id,
 			'menu_order'     => (int) ( $item['menu_order'] ?? 0 ),
 			'comment_status' => $item['comment_status'] ?? 'closed',
@@ -428,6 +471,12 @@ class Importer {
 
 			if ( is_string( $meta_value ) ) {
 				$meta_value = $this->replace_ids_in_string( $meta_value, $mapper );
+
+				if ( $this->url_remapper ) {
+					$meta_value = $this->url_remapper->remap_string( $meta_value );
+				}
+			} elseif ( is_array( $meta_value ) && $this->url_remapper ) {
+				$meta_value = $this->url_remapper->remap( $meta_value );
 			}
 
 			update_post_meta( $post_id, $meta_key, $meta_value );

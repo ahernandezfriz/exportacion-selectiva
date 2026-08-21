@@ -72,8 +72,10 @@ class Ajax_Handler {
 		$indexes     = isset( $_POST['items'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['items'] ) ) : array();
 		$policy      = isset( $_POST['policy'] ) ? sanitize_key( wp_unslash( $_POST['policy'] ) ) : 'skip';
 		$post_type   = isset( $_POST['post_type'] ) ? sanitize_key( wp_unslash( $_POST['post_type'] ) ) : 'post';
+		$remap_urls  = ! isset( $_POST['remap_urls'] ) || '0' !== (string) wp_unslash( $_POST['remap_urls'] );
+		$target_url  = isset( $_POST['target_url'] ) ? esc_url_raw( wp_unslash( $_POST['target_url'] ) ) : home_url();
 
-		$result = ( new Batch_Importer() )->create_job( $session_key, $indexes, $policy, $post_type );
+		$result = ( new Batch_Importer() )->create_job( $session_key, $indexes, $policy, $post_type, $remap_urls, $target_url );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
