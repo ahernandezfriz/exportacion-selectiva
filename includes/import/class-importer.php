@@ -166,6 +166,12 @@ class Importer {
 			return $data;
 		}
 
+		$source_url = (string) ( $data['manifest']['source_url'] ?? ( $session['manifest']['source_url'] ?? '' ) );
+
+		if ( $source_url ) {
+			$this->set_url_remapper( $source_url, home_url() );
+		}
+
 		$conflicts = new Conflict_Resolver();
 		$policy    = $conflicts->sanitize_policy( $policy );
 		$mapper    = new Id_Mapper();
