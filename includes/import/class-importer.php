@@ -286,7 +286,18 @@ class Importer {
 		wp_update_attachment_metadata( $attachment_id, $metadata );
 
 		if ( ! empty( $attachment_data['meta'] ) && is_array( $attachment_data['meta'] ) ) {
+			// No pisar ruta/metadatos locales: el archivo se subió a una ruta nueva.
+			$skip_meta = array(
+				'_wp_attached_file',
+				'_wp_attachment_metadata',
+				'_wp_attachment_tmp',
+			);
+
 			foreach ( $attachment_data['meta'] as $meta_key => $meta_value ) {
+				if ( in_array( $meta_key, $skip_meta, true ) ) {
+					continue;
+				}
+
 				update_post_meta( $attachment_id, $meta_key, $meta_value );
 			}
 		}
@@ -410,7 +421,8 @@ class Importer {
 	 */
 	private function import_post_meta( int $post_id, array $meta, Id_Mapper $mapper ): void {
 		foreach ( $meta as $meta_key => $meta_value ) {
-			if ( '_edit_lock' === $meta_key ) {
+			// La destacada se asigna después con set_post_thumbnail() y el mapa de IDs.
+			if ( in_array( $meta_key, array( '_edit_lock', '_thumbnail_id' ), true ) ) {
 				continue;
 			}
 
@@ -454,11 +466,22 @@ class Importer {
 	 * @return void
 	 */
 	private function import_thumbnail( int $post_id, int $old_thumbnail_id, Id_Mapper $mapper ): void {
+		if ( $old_thumbnail_id <= 0 ) {
+			return;
+		}
+
 		$new_thumbnail_id = $mapper->get( $old_thumbnail_id );
 
-		if ( $new_thumbnail_id ) {
-			set_post_thumbnail( $post_id, $new_thumbnail_id );
+		if ( ! $new_thumbnail_id ) {
+			return;
 		}
+
+		// Confirma que el adjunto existe y es válido en el destino.
+		if ( 'attachment' !== get_post_type( $new_thumbnail_id ) ) {
+			return;
+		}
+
+		set_post_thumbnail( $post_id, $new_thumbnail_id );
 	}
 
 	/**

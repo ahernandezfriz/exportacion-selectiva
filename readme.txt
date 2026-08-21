@@ -5,7 +5,7 @@ Tags: export, import, migration, content, pages
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,6 +101,10 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 
 == Changelog ==
 
+= 1.2.1 =
+* Fixed featured image import: keep local attachment path/metadata after upload.
+* Skip raw `_thumbnail_id` meta and assign thumbnails via remapped IDs only.
+
 = 1.2.0 =
 * Background batch processing for large exports and imports (AJAX progress).
 * Added Compare differences conflict policy with title/slug/date review.
@@ -119,6 +123,9 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 * `.wpcontent` format version 1.0.
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Fixes featured image not loading after import.
 
 = 1.2.0 =
 Adds background batch processing and compare-differences conflict review.
