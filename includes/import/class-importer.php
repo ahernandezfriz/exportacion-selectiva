@@ -30,11 +30,25 @@ class Importer {
 	private $adapters;
 
 	/**
-	 * Remapeador de URLs (opcional).
+	 * Remapeador de URLs de dominio (opcional).
 	 *
 	 * @var Url_Remapper|null
 	 */
 	private $url_remapper = null;
+
+	/**
+	 * URL origen del paquete (para armar rutas antiguas de uploads).
+	 *
+	 * @var string
+	 */
+	private $source_url = '';
+
+	/**
+	 * Mapa de URLs de medios antiguas => nuevas.
+	 *
+	 * @var array<string, string>
+	 */
+	private $media_url_map = array();
 
 	/**
 	 * Constructor.
@@ -55,8 +69,19 @@ class Importer {
 	 * @return void
 	 */
 	public function set_url_remapper( string $source_url, string $target_url ): void {
-		$remapper = new Url_Remapper( $source_url, $target_url );
+		$this->source_url = $source_url;
+		$remapper         = new Url_Remapper( $source_url, $target_url );
 		$this->url_remapper = $remapper->has_replacements() ? $remapper : null;
+	}
+
+	/**
+	 * Guarda la URL origen aunque no haya remapeo de dominio.
+	 *
+	 * @param string $source_url URL origen.
+	 * @return void
+	 */
+	public function set_source_url( string $source_url ): void {
+		$this->source_url = $source_url;
 	}
 
 	/**
@@ -66,6 +91,156 @@ class Importer {
 	 */
 	public function clear_url_remapper(): void {
 		$this->url_remapper = null;
+	}
+
+	/**
+	 * Construye el mapa de URLs de medios a partir del paquete y el Id_Mapper.
+	 *
+	 * @param array<int, array<string, mixed>> $media Lista de medios del paquete.
+	 * @param Id_Mapper                        $mapper Mapa de IDs.
+	 * @return void
+	 */
+	public function prepare_media_url_map( array $media, Id_Mapper $mapper ): void {
+		$pairs = array();
+
+		foreach ( $media as $attachment_data ) {
+			if ( empty( $attachment_data['source_id'] ) ) {
+				continue;
+			}
+
+			$new_id = $mapper->get( (int) $attachment_data['source_id'] );
+
+			if ( ! $new_id ) {
+				continue;
+			}
+
+			$new_url = wp_get_attachment_url( $new_id );
+
+			if ( ! $new_url ) {
+				continue;
+			}
+
+			$pairs = array_merge( $pairs, $this->build_attachment_url_pairs( $attachment_data, $new_url, $new_id ) );
+		}
+
+		uksort(
+			$pairs,
+			static function ( $a, $b ) {
+				return strlen( (string) $b ) <=> strlen( (string) $a );
+			}
+		);
+
+		$this->media_url_map = $pairs;
+	}
+
+	/**
+	 * Aplica remapeo de IDs, URLs de medios y dominio a una cadena.
+	 *
+	 * @param string    $value Cadena.
+	 * @param Id_Mapper $mapper Mapa.
+	 * @return string
+	 */
+	private function remap_content_string( string $value, Id_Mapper $mapper ): string {
+		$value = $this->replace_ids_in_string( $value, $mapper );
+
+		if ( ! empty( $this->media_url_map ) ) {
+			$value = strtr( $value, $this->media_url_map );
+		}
+
+		if ( $this->url_remapper ) {
+			$value = $this->url_remapper->remap_string( $value );
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Genera pares de URL antigua => nueva para un adjunto.
+	 *
+	 * @param array<string, mixed> $attachment_data Datos del paquete.
+	 * @param string               $new_url URL nueva del adjunto.
+	 * @param int                  $new_id ID nuevo.
+	 * @return array<string, string>
+	 */
+	private function build_attachment_url_pairs( array $attachment_data, string $new_url, int $new_id ): array {
+		$pairs     = array();
+		$file      = isset( $attachment_data['file'] ) ? ltrim( str_replace( '\\', '/', (string) $attachment_data['file'] ), '/' ) : '';
+		$new_meta  = wp_get_attachment_metadata( $new_id );
+		$old_meta  = array();
+
+		if ( ! empty( $attachment_data['meta']['_wp_attachment_metadata'] ) && is_array( $attachment_data['meta']['_wp_attachment_metadata'] ) ) {
+			$old_meta = $attachment_data['meta']['_wp_attachment_metadata'];
+		}
+
+		$old_candidates = array();
+
+		if ( ! empty( $attachment_data['guid'] ) ) {
+			$old_candidates[] = (string) $attachment_data['guid'];
+		}
+
+		if ( $file ) {
+			$old_candidates[] = '/wp-content/uploads/' . $file;
+			$old_candidates[] = 'wp-content/uploads/' . $file;
+			$old_candidates[] = untrailingslashit( home_url() ) . '/wp-content/uploads/' . $file;
+
+			if ( $this->source_url ) {
+				$old_candidates[] = untrailingslashit( $this->source_url ) . '/wp-content/uploads/' . $file;
+			}
+
+			if ( $this->url_remapper ) {
+				foreach ( array_keys( $this->url_remapper->get_replacements() ) as $from_base ) {
+					$old_candidates[] = untrailingslashit( $from_base ) . '/wp-content/uploads/' . $file;
+				}
+			}
+		}
+
+		foreach ( array_unique( array_filter( $old_candidates ) ) as $old_url ) {
+			$pairs[ $old_url ] = $new_url;
+			$pairs[ str_replace( '/', '\/', $old_url ) ] = str_replace( '/', '\/', $new_url );
+		}
+
+		// Tamaños derivados (thumbnail, medium, etc.).
+		if ( $file && ! empty( $old_meta['sizes'] ) && is_array( $old_meta['sizes'] ) && ! empty( $new_meta['sizes'] ) && is_array( $new_meta['sizes'] ) ) {
+			$old_dir = trailingslashit( dirname( $file ) );
+			$new_dir_url = trailingslashit( dirname( $new_url ) );
+
+			foreach ( $old_meta['sizes'] as $size => $info ) {
+				if ( empty( $info['file'] ) || empty( $new_meta['sizes'][ $size ]['file'] ) ) {
+					continue;
+				}
+
+				$old_size_rel = ( '.' === $old_dir || './' === $old_dir ) ? $info['file'] : $old_dir . $info['file'];
+				$old_size_rel = ltrim( str_replace( '\\', '/', $old_size_rel ), '/' );
+				$new_size_url = $new_dir_url . $new_meta['sizes'][ $size ]['file'];
+
+				$size_candidates = array(
+					'/wp-content/uploads/' . $old_size_rel,
+					'wp-content/uploads/' . $old_size_rel,
+					untrailingslashit( home_url() ) . '/wp-content/uploads/' . $old_size_rel,
+				);
+
+				if ( $this->source_url ) {
+					$size_candidates[] = untrailingslashit( $this->source_url ) . '/wp-content/uploads/' . $old_size_rel;
+				}
+
+				if ( ! empty( $attachment_data['guid'] ) ) {
+					$size_candidates[] = trailingslashit( dirname( (string) $attachment_data['guid'] ) ) . $info['file'];
+				}
+
+				if ( $this->url_remapper ) {
+					foreach ( array_keys( $this->url_remapper->get_replacements() ) as $from_base ) {
+						$size_candidates[] = untrailingslashit( $from_base ) . '/wp-content/uploads/' . $old_size_rel;
+					}
+				}
+
+				foreach ( array_unique( array_filter( $size_candidates ) ) as $old_size_url ) {
+					$pairs[ $old_size_url ] = $new_size_url;
+					$pairs[ str_replace( '/', '\/', $old_size_url ) ] = str_replace( '/', '\/', $new_size_url );
+				}
+			}
+		}
+
+		return $pairs;
 	}
 
 	/**
@@ -169,6 +344,7 @@ class Importer {
 		$source_url = (string) ( $data['manifest']['source_url'] ?? ( $session['manifest']['source_url'] ?? '' ) );
 
 		if ( $source_url ) {
+			$this->set_source_url( $source_url );
 			$this->set_url_remapper( $source_url, home_url() );
 		}
 
@@ -185,6 +361,7 @@ class Importer {
 
 		$this->import_terms( $data['terms'], $mapper );
 		$this->import_media( $data['media'], $data['extract_dir'], $mapper );
+		$this->prepare_media_url_map( $data['media'], $mapper );
 
 		$indexes = array_values( array_unique( array_map( 'absint', $indexes ) ) );
 
@@ -393,14 +570,36 @@ class Importer {
 		$this->import_thumbnail( (int) $post_id, (int) ( $item['thumbnail_id'] ?? 0 ), $mapper );
 
 		$adapters_data = $item['adapters'] ?? array();
-
-		if ( $this->url_remapper ) {
-			$adapters_data = $this->url_remapper->remap( $adapters_data );
-		}
+		$adapters_data = $this->remap_content_value( $adapters_data, $mapper );
 
 		$this->import_adapters( (int) $post_id, is_array( $adapters_data ) ? $adapters_data : array(), $mapper );
 
 		return $result;
+	}
+
+	/**
+	 * Remapea recursivamente valores mixtos (arrays/strings).
+	 *
+	 * @param mixed     $value Valor.
+	 * @param Id_Mapper $mapper Mapa.
+	 * @return mixed
+	 */
+	private function remap_content_value( $value, Id_Mapper $mapper ) {
+		if ( is_array( $value ) ) {
+			$remapped = array();
+
+			foreach ( $value as $key => $item ) {
+				$remapped[ $key ] = $this->remap_content_value( $item, $mapper );
+			}
+
+			return $remapped;
+		}
+
+		if ( is_string( $value ) ) {
+			return $this->remap_content_string( $value, $mapper );
+		}
+
+		return $value;
 	}
 
 	/**
@@ -437,21 +636,14 @@ class Importer {
 	 */
 	private function build_postarr( array $item, string $target_post_type, Id_Mapper $mapper ): array {
 		$parent_id = $mapper->get( (int) ( $item['post_parent'] ?? 0 ) );
-		$content   = $this->replace_ids_in_string( $item['post_content'] ?? '', $mapper );
-		$excerpt   = $item['post_excerpt'] ?? '';
-
-		if ( $this->url_remapper ) {
-			$content = $this->url_remapper->remap_string( $content );
-			$excerpt = $this->url_remapper->remap_string( (string) $excerpt );
-		}
 
 		return array(
 			'post_type'      => $target_post_type,
 			'post_status'    => $item['post_status'],
 			'post_title'     => $item['post_title'],
 			'post_name'      => $item['post_name'],
-			'post_content'   => $content,
-			'post_excerpt'   => $excerpt,
+			'post_content'   => $this->remap_content_string( $item['post_content'] ?? '', $mapper ),
+			'post_excerpt'   => $this->remap_content_string( (string) ( $item['post_excerpt'] ?? '' ), $mapper ),
 			'post_parent'    => $parent_id,
 			'menu_order'     => (int) ( $item['menu_order'] ?? 0 ),
 			'comment_status' => $item['comment_status'] ?? 'closed',
@@ -476,13 +668,9 @@ class Importer {
 			}
 
 			if ( is_string( $meta_value ) ) {
-				$meta_value = $this->replace_ids_in_string( $meta_value, $mapper );
-
-				if ( $this->url_remapper ) {
-					$meta_value = $this->url_remapper->remap_string( $meta_value );
-				}
-			} elseif ( is_array( $meta_value ) && $this->url_remapper ) {
-				$meta_value = $this->url_remapper->remap( $meta_value );
+				$meta_value = $this->remap_content_string( $meta_value, $mapper );
+			} elseif ( is_array( $meta_value ) ) {
+				$meta_value = $this->remap_content_value( $meta_value, $mapper );
 			}
 
 			update_post_meta( $post_id, $meta_key, $meta_value );

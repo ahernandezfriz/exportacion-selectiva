@@ -120,6 +120,8 @@ class Batch_Importer {
 				(string) $job['source_url'],
 				(string) ( $job['target_url'] ?? home_url() )
 			);
+		} elseif ( ! empty( $job['source_url'] ) ) {
+			$importer->set_source_url( (string) $job['source_url'] );
 		}
 
 		$package  = new Wpcontent_Package();
@@ -165,6 +167,7 @@ class Batch_Importer {
 				$job['cursor'] = 0;
 			}
 		} elseif ( 'posts' === $job['step'] ) {
+			$importer->prepare_media_url_map( $data['media'], $mapper );
 			$slice = array_slice( $job['indexes'], (int) $job['cursor'], $batch_size );
 
 			foreach ( $slice as $index ) {

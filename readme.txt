@@ -5,7 +5,7 @@ Tags: export, import, migration, content, pages
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,6 +101,9 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 
 == Changelog ==
 
+= 1.3.1 =
+* Fixed content images after import by rewriting old upload URLs to the new attachment URLs.
+
 = 1.3.0 =
 * Added optional URL remapping from package source domain to the current site.
 * Import wizard shows source/destination URLs and a remap checkbox.
@@ -127,6 +130,9 @@ No. This plugin uses its own `.wpcontent` format based on compressed JSON.
 * `.wpcontent` format version 1.0.
 
 == Upgrade Notice ==
+
+= 1.3.1 =
+Fixes in-content images pointing to old upload paths after import.
 
 = 1.3.0 =
 Adds URL remapping when importing packages from another domain.
